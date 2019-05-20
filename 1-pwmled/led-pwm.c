@@ -70,6 +70,7 @@ int main(void)
   ROMEMU();           /* ROMエミュレーションをON */
 
   /* ここでLEDポート(P9)の初期化を行う */
+  P9DDR = 0x30;
 
   /* 割り込みで使用する大域変数の初期化 */
   pwm_time = pwm_count = 0;     /* PWM制御関連 */
@@ -121,6 +122,11 @@ void int_imia0(void)
   /* キー処理の中身は全て key.c にある */
 
   /* ここにPWM処理に分岐するための処理を書く */
+  pwm_time++;
+  if (pwm_time >= PWMTIME){
+    pwm_time = 0;
+	pwm_proc();
+  }
 
   /* ここにA/D変換開始の処理を直接書く */
   /* A/D変換の初期化・スタート・ストップの処理関数は ad.c にある */
@@ -173,8 +179,28 @@ void pwm_proc(void)
      /* PWM制御を行う関数                                        */
      /* この関数はタイマ割り込み0の割り込みハンドラから呼び出される */
 {
+	
+  redval = 5;
+  greenval = 3;
 
   /* ここにPWM制御の中身を書く */
+  pwm_count++;
+  if (pwm_count > MAXPWMCOUNT){
+    pwm_count = 0;
+  }
+  
+  if(pwm_count < redval){
+	P9DR &= ~REDLEDPOS;
+  }else{
+	P9DR |= REDLEDPOS;
+  }
+
+  if(pwm_count < greenval){
+	P9DR &= ~GREENLEDPOS;
+  }else{
+	P9DR |= GREENLEDPOS;
+  }
+
 
 }
 
