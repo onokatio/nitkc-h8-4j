@@ -130,6 +130,11 @@ void int_imia0(void)
 
   /* ここにA/D変換開始の処理を直接書く */
   /* A/D変換の初期化・スタート・ストップの処理関数は ad.c にある */
+  control_time++;
+  if (control_time >= CONTROLTIME){
+    control_time = 0;
+	control_proc();
+  }
 
   /* ここに制御処理に分岐するための処理を書く */
 
@@ -181,14 +186,9 @@ void pwm_proc(void)
 {
 	
   redval = 5;
-  greenval = 3;
+  greenval = 2;
 
   /* ここにPWM制御の中身を書く */
-  pwm_count++;
-  if (pwm_count > MAXPWMCOUNT){
-    pwm_count = 0;
-  }
-  
   if(pwm_count < redval){
 	P9DR &= ~REDLEDPOS;
   }else{
@@ -199,6 +199,11 @@ void pwm_proc(void)
 	P9DR &= ~GREENLEDPOS;
   }else{
 	P9DR |= GREENLEDPOS;
+  }
+
+  pwm_count++;
+  if (pwm_count >= MAXPWMCOUNT){
+    pwm_count = 0;
   }
 
 
