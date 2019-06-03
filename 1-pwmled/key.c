@@ -126,16 +126,37 @@ int key_read(int keynum)
      /* 戻り値は, KEYOFF, KEYON, KEYPOSEDGE, KEYNEGEDGE, KEYNONE のいずれか */
      /*      離されている，押されている，今押された，今離された，キーなし      */
 {
-  int keyval;
+  int keyval = KEYNONE;
+  int i;
 
   if ((keynum < KEYMINNUM) || (keynum > KEYMAXNUM))
     keyval = KEYNONE; /* キー番号指定が正しくないときはKEYNONEを返す */
   else {
 
+	for(i = 0; i < KEYMAXNUM; i++){
+		keyoldval[i] = keynewval[i];
+		keynewval[i] = key_check(i);
+	}
+
     /* ここでキー状態の判定を行う */
     /* チャタリング処理関数 key_check() は遷移中を示す KEYTRANS を */
     /* 含んだ値を返すので、正しく処理を行うこと */
     /* 過去のキー情報を知らないと、正しい処理ができない */
+	if(
+			(keyoldval[keynum] == KEYOFF && keynewval[keynum] == KEYON) ||
+			(keyoldval[keynum] == KEYTRANS && keynewval[keynum] == KEYON)
+	){
+		keyval = KEYPOSEDGE;
+	}else if(
+			(keyoldval[keynum] == KEYON && keynewval[keynum] == KEYOFF) ||
+			(keyoldval[keynum] == KEYTRANS && keynewval[keynum] == KEYOFF)
+	){
+		keyval = KEYNEGEDGE;
+	}else{
+		if(keynewval[keynum] == KEYON) keyval = KEYON;
+		if(keynewval[keynum] == KEYOFF) keyval = KEYOFF;
+		if(keynewval[keynum] == KEYTRANS) keyval = KEYNONE;
+	}
 
   }
   return keyval;

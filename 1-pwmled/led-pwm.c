@@ -90,10 +90,30 @@ int main(void)
   redval = greenval = 0; /* 赤・緑LEDの両方を消灯とする */
 
   /* ここでLCDに表示する文字列を初期化しておく */
+  lcd_clear();
+
+  lcd_cursor(0,0);
+
+  char redstr[] = "RED: ";
+  lcd_printstr(redstr);
 
   while (1){ /* 普段はこのループを実行している */
 
     /* ここで disp_flag によってLCDの表示を更新する */
+	  if(disp_flag){
+			disp_flag = 1;
+
+  			lcd_cursor(0,0);
+  			//lcd_printstr("RED: ");
+  			lcd_printstr(redstr);
+		  //lcd_cursor(10,0);
+		  lcd_printch('R');
+		  lcd_printch('E');
+		  lcd_printch('0');
+
+		  //lcd_cursor(0,1);
+		  //lcd_printstr("GREEN: ");
+	  }
 
     /* その他の処理はタイマ割り込みによって自動的に実行されるため  */
     /* タイマ 0 の割り込みハンドラ内から各処理関数を呼び出すことが必要 */
@@ -120,6 +140,11 @@ void int_imia0(void)
 
   /* ここにキー処理に分岐するための処理を書く */
   /* キー処理の中身は全て key.c にある */
+  key_time++;
+  if (key_time >= KEYTIME){
+    key_time = 0;
+	key_sense();
+  }
 
   /* ここにPWM処理に分岐するための処理を書く */
   pwm_time++;
@@ -185,8 +210,8 @@ void pwm_proc(void)
      /* この関数はタイマ割り込み0の割り込みハンドラから呼び出される */
 {
 	
-  redval = 5;
-  greenval = 2;
+  //redval = 5;
+  //greenval = 2;
 
   /* ここにPWM制御の中身を書く */
   if(pwm_count < redval){
@@ -215,5 +240,17 @@ void control_proc(void)
 {
 
   /* ここに制御処理を書く */
+	if(key_read(3) == KEYPOSEDGE){
+		greenval++;
+	}
+	if(key_read(2) == KEYPOSEDGE){
+		redval++;
+	}
+	if(key_read(5) == KEYPOSEDGE){
+		redval--;
+	}
+	if(key_read(6) == KEYPOSEDGE){
+		greenval--;
+	}
 
 }
