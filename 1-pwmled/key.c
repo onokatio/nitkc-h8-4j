@@ -133,10 +133,8 @@ int key_read(int keynum)
     keyval = KEYNONE; /* キー番号指定が正しくないときはKEYNONEを返す */
   else {
 
-	for(i = 0; i < KEYMAXNUM; i++){
-		keyoldval[i] = keynewval[i];
-		keynewval[i] = key_check(i);
-	}
+	keyoldval[keynum] = keynewval[keynum];
+	keynewval[keynum] = key_check(keynum);
 
     /* ここでキー状態の判定を行う */
     /* チャタリング処理関数 key_check() は遷移中を示す KEYTRANS を */

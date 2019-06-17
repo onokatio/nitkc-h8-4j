@@ -7,7 +7,7 @@
 /* 時間待ちはムダ時間ループによる時間待ちで実現している */
 /* LCDの動作時間は個体差や経年変化、動作時の温度等で異なる */
 /* 文字化けや文字抜けが起きるときは、数値を大きくするよい */
-#define TCONST40us 200
+#define TCONST40us 800
 #define TCONST1ms 5000
 
 #define LCD_RS 0x40
@@ -45,6 +45,7 @@ void lcd_init(void)
   lcd_putch(0x06,0); /* エントリーモードセット Inc. without Disp.shift */
   lcd_putch(0x0c,0); /* ディスプレイON/OFF制御(ON) */
   lcd_putch(0x80,0); /* DDRAMアドレスセット */
+  wait1ms(2);        /* 処理待ち > 1.64ms */
 }
 
 void lcd_cursor(int x, int y)
