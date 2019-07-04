@@ -107,8 +107,10 @@ int main(void)
   		lcd_cursor(3,0);
 		lcd_printch(':');
   		lcd_cursor(4,0);
-		lcd_printch(redval/10 ? '1' : ' ');
+		lcd_printch(redval/100 + '0');
   		lcd_cursor(5,0);
+		lcd_printch((redval/10)%10 + '0');
+  		lcd_cursor(6,0);
 		lcd_printch('0' + redval%10);
 
   		lcd_cursor(0,1);
@@ -124,8 +126,10 @@ int main(void)
   		lcd_cursor(5,1);
 		lcd_printch(':');
   		lcd_cursor(6,1);
-		lcd_printch(greenval/10 ? '1' : ' ');
+		lcd_printch(greenval/100 + '0');
   		lcd_cursor(7,1);
+		lcd_printch((greenval/10)%10 + '0');
+  		lcd_cursor(8,1);
 		lcd_printch('0' + greenval%10);
 	  }
 
@@ -169,13 +173,18 @@ void int_imia0(void)
 
   /* ここにA/D変換開始の処理を直接書く */
   /* A/D変換の初期化・スタート・ストップの処理関数は ad.c にある */
+  ad_time++;
+  if (ad_time >= ADTIME){
+    ad_time = 0;
+	ad_scan(0,1);
+  }
+
+  /* ここに制御処理に分岐するための処理を書く */
   control_time++;
   if (control_time >= CONTROLTIME){
     control_time = 0;
 	control_proc();
   }
-
-  /* ここに制御処理に分岐するための処理を書く */
 
   timer_intflag_reset(0); /* 割り込みフラグをクリア */
   ENINT();                /* CPUを割り込み許可状態に */
@@ -190,9 +199,17 @@ void int_adi(void)
   ad_stop();    /* A/D変換の停止と変換終了フラグのクリア */
 
   /* ここでバッファポインタの更新を行う */
+  adbufdp++;
+  if(adbufdp >= ADBUFSIZE){
+	  adbufdp = 0;
+  }
   /* 　但し、バッファの境界に注意して更新すること */
 
   /* ここでバッファにA/Dの各チャネルの変換データを入れる */
+  adbuf[0][adbufdp] = ADDRAH;
+  adbuf[1][adbufdp] = ADDRBH;
+  adbuf[2][adbufdp] = ADDRCH;
+  adbuf[3][adbufdp] = ADDRDH;
   /* スキャングループ 0 を指定した場合は */
   /*   A/D ch0〜3 (信号線ではAN0〜3)の値が ADDRAH〜ADDRDH に格納される */
   /* スキャングループ 1 を指定した場合は */
@@ -207,6 +224,8 @@ int ad_read(int ch)
      /* 戻り値は, 指定チャネルの平均化した値 (チャネル指定エラー時はADCHNONE) */
 {
   int i,ad,bp;
+  ad = 0;
+  bp = adbufdp;
 
   if ((ch > ADCHNUM) || (ch < 0)) ad = ADCHNONE; /* チャネル範囲のチェック */
   else {
@@ -214,6 +233,10 @@ int ad_read(int ch)
     /* ここで指定チャネルのデータをバッファからADAVRNUM個取り出して平均する */
     /* データを取り出すときに、バッファの境界に注意すること */
     /* 平均した値が戻り値となる */
+	for(i=0;i<ADAVRNUM;i++){
+		ad+=adbuf[ch][(bp-i)%ADBUFSIZE];
+	}
+	ad /= ADAVRNUM;
 
   }
   return ad; /* データの平均値を返す */
@@ -254,6 +277,7 @@ void control_proc(void)
 {
 
   /* ここに制御処理を書く */
+	/*
 	if(key_read(3) == KEYPOSEDGE){
 		greenval++;
 		if(greenval >= MAXPWMCOUNT){
@@ -277,5 +301,9 @@ void control_proc(void)
 			redval--;
 		}
 	}
+	*/
+
+	greenval = ad_read(0);
+	redval = ad_read(1);
 
 }
