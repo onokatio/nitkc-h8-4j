@@ -27,7 +27,7 @@
 
 /* PWM制御関連 */
 /* 制御周期を決める定数 */
-#define MAXPWMCOUNT 10
+#define MAXPWMCOUNT 255
 
 /* A/D変換関連 */
 /* A/D変換のチャネル数とバッファサイズ */
@@ -107,7 +107,7 @@ int main(void)
   		lcd_cursor(3,0);
 		lcd_printch(':');
   		lcd_cursor(4,0);
-		lcd_printch(redval/100 + '0');
+		lcd_printch((redval/100)%10 + '0');
   		lcd_cursor(5,0);
 		lcd_printch((redval/10)%10 + '0');
   		lcd_cursor(6,0);
@@ -126,7 +126,7 @@ int main(void)
   		lcd_cursor(5,1);
 		lcd_printch(':');
   		lcd_cursor(6,1);
-		lcd_printch(greenval/100 + '0');
+		lcd_printch((greenval/100)%10 + '0');
   		lcd_cursor(7,1);
 		lcd_printch((greenval/10)%10 + '0');
   		lcd_cursor(8,1);
@@ -176,6 +176,7 @@ void int_imia0(void)
   ad_time++;
   if (ad_time >= ADTIME){
     ad_time = 0;
+	//ad_start(0,1);
 	ad_scan(0,1);
   }
 
@@ -226,6 +227,7 @@ int ad_read(int ch)
   int i,ad,bp;
   ad = 0;
   bp = adbufdp;
+  int tmp = 0;
 
   if ((ch > ADCHNUM) || (ch < 0)) ad = ADCHNONE; /* チャネル範囲のチェック */
   else {
@@ -234,7 +236,9 @@ int ad_read(int ch)
     /* データを取り出すときに、バッファの境界に注意すること */
     /* 平均した値が戻り値となる */
 	for(i=0;i<ADAVRNUM;i++){
-		ad+=adbuf[ch][(bp-i)%ADBUFSIZE];
+		tmp = bp - i;
+		if(tmp < 0) tmp=ADBUFSIZE+tmp;
+		ad+=adbuf[ch][tmp];
 	}
 	ad /= ADAVRNUM;
 
@@ -303,7 +307,7 @@ void control_proc(void)
 	}
 	*/
 
-	greenval = ad_read(0);
-	redval = ad_read(1);
+	greenval = ad_read(1);
+	redval = ad_read(2);
 
 }
